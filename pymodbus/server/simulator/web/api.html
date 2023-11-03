@@ -29,11 +29,32 @@ table th {
     border-right-width: 1px;
     text-align: center;
 }
+
+input[type=number]:invalid {
+    background-color: orangered;
+}
+
     </style>
     <script>
 let timer_id = null;
 let count = null;
 let table_area;
+
+const change_resister_value = (ev) => {
+    let addr = ev.target.getAttribute("id").split("_")[1];
+    let num_input = document.getElementById("NumInput_"+addr);
+    let number = num_input.value;
+    if( num_input.checkValidity() ) {
+        fetch(`/api/registers?register=${addr}&value=${number}&submit=Set`);
+    } else {
+        alert("レジスタの値は0〜65535にしてください。");
+    }
+};
+/*
+const validate_16bit_integer = () => {
+
+};
+*/
 const refresh = () => {
     fetch("/api/registers", {method: "POST"}).then((res)=>{
         if(res.status>=500) {
@@ -60,19 +81,22 @@ const refresh = () => {
                         value.setAttribute("id", "Value_"+addr);
                         
                         let conf = document.createElement("td");
-                        let num_input = document.createElement("input");
-                        num_input.setAttribute("type", "number");
-                        num_input.setAttribute("id", "NumInput_"+addr)
-                        let apply_button = document.createElement("button");
-                        apply_button.innerHTML = "設定"
-                        apply_button.setAttribute("id", "ApplyButton_"+addr);
-                        apply_button.addEventListener("click", (ev)=>{
-                            let addr = ev.target.getAttribute("id").split("_")[1];
-                            let number = document.getElementById("NumInput_"+addr).value;
-                            fetch(`/api/registers?register=${addr}&value=${number}&submit=Set`);
-                        });
-                        conf.appendChild(num_input);
-                        conf.appendChild(apply_button);
+                        for(let i=0; i<l["words"];i++) {
+                            let num_input = document.createElement("input");
+                            num_input.setAttribute("type", "number");
+                            num_input.setAttribute("id", "NumInput_"+addr);
+                            num_input.setAttribute("max", 65535);
+                            num_input.setAttribute("min", 0);
+
+                            let apply_button = document.createElement("button");
+                            apply_button.innerHTML = "設定"
+                            apply_button.setAttribute("id", "ApplyButton_"+addr);
+                            apply_button.addEventListener("click", change_resister_value);
+
+                            conf.appendChild(num_input);
+                            conf.appendChild(apply_button);
+                            conf.appendChild(document.createElement("br"));
+                        }
 
                         tr.appendChild(address);
                         tr.appendChild(type);
@@ -97,7 +121,7 @@ const refresh = () => {
             });
         });
     }).catch(print_error);
-}
+};
 
 const init = () => {
     count = null;
@@ -107,7 +131,7 @@ const init = () => {
     fetch("/api/registers?range_start=&range_stop=&type=-1&action=-1&submit=Add").then(()=>{
         timer_id = setInterval(refresh, 100);
     });
-}
+};
 
 const stop_fetch = () => {
     if(timer_id) {
@@ -116,7 +140,7 @@ const stop_fetch = () => {
     timer_id = null;
     document.getElementById("start").removeAttribute("hidden");
     document.getElementById("stop").setAttribute("hidden", "1");
-}
+};
 
 const print_error = () => {
     if(timer_id) {
