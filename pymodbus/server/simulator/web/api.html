@@ -34,6 +34,14 @@ input[type=number]:invalid {
     background-color: orangered;
 }
 
+td.updated {
+    background-color: rgb(255, 220, 220);
+}
+
+td.kept {
+    background-color: none;
+}
+
     </style>
     <script>
 let timer_id = null;
@@ -116,7 +124,14 @@ const refresh = () => {
             j.forEach((l)=>{
                 if(typeof(l)=="object") {
                     let addr = l["address"];
-                    document.getElementById("Value_"+addr).innerHTML = l["value"];
+                    let value_element = document.getElementById("Value_"+addr);
+                    if( parseInt(value_element.innerText)!=parseInt(l["value"]) ) {
+                        //updated
+                        value_element.setAttribute("class", "updated");
+                    } else if( value_element.getAttribute("class")=="updated") {
+                        value_element.setAttribute("class", "kept");
+                    }
+                    value_element.innerHTML = l["value"];
                 }
             });
         });
