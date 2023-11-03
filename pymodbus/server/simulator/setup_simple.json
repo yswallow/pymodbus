@@ -1,0 +1,73 @@
+{
+    "server_list": {
+        "server": {
+            "comm": "tcp",
+            "host": "0.0.0.0",
+            "port": 5020,
+            "ignore_missing_slaves": false,
+            "framer": "socket",
+            "identity": {
+                "VendorName": "yswallow",
+                "ProductCode": "YS",
+                "VendorUrl": "https://github.com/yswallow",
+                "ProductName": "pymodbus Server",
+                "ModelName": "pymodbus Server",
+                "MajorMinorRevision": "3.5.4"
+            }
+        }
+    },
+    "device_list": {
+        "device": {
+            "setup": {
+                "co size": 20,
+                "di size": 20,
+                "hr size": 20,
+                "ir size": 20,
+                "shared blocks": true,
+                "type exception": true,
+                "defaults": {
+                    "value": {
+                        "bits": 0,
+                        "uint16": 0,
+                        "uint32": 0,
+                        "float32": 0.0,
+                        "string": " "
+                    },
+                    "action": {
+                        "bits": null,
+                        "uint16": null,
+                        "uint32": null,
+                        "float32": null,
+                        "string": null
+                    }
+                }
+            },
+            "invalid": [
+                17,18,19
+            ],
+            "write": [
+                [11, 16]
+            ],
+            "bits": [
+                6
+            ],
+            "uint16": [
+                4,5,
+                [11, 16],
+                {"addr": 1, "action": "uptime"},
+                {"addr": 2, "action": "increment"},
+                {"addr": 3, "action": "random"}
+            ],
+            "uint32": [
+                {"addr": [7, 8], "value": 1},
+                {"addr": [9,10], "value": 1879048192}
+            ],
+            "float32": [
+            ],
+            "string": [
+            ],
+            "repeat": [
+            ]
+        }
+    }
+}

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>PyModbus fetch</title>
+</head>
+<body>
+    <style>
+table {
+    border-collapse: collapse;
+    border: 4px solid black;
+}
+
+table td {
+    border-color: black;
+    border-bottom-style: solid;
+    border-right-style: solid;
+
+    border-bottom-width: 2px;
+    border-right-width: 1px;
+    text-align: right;
+}
+
+table th {
+    border-color: black;
+    border-bottom-width: 4px;
+    border-bottom-style: double;
+    border-right-style: solid;
+    border-right-width: 1px;
+    text-align: center;
+}
+    </style>
+    <script>
+let timer_id = null;
+let count = null;
+let table_area;
+const refresh = () => {
+    fetch("/api/registers", {method: "POST"}).then((res)=>{
+        if(res.status>=500) {
+            print_error();
+            return;
+        }
+        res.json().then((j)=>{
+            if(count==null) {
+                j.forEach( (l)=>{
+                    if(typeof(l)=="object") {
+                        let addr = l["address"];
+                        let tr = document.createElement("tr");
+                        tr.setAttribute("id", "Register_"+addr);
+                        
+                        let address = document.createElement("td");
+                        address.setAttribute("id", "Address_"+addr);
+                        address.innerHTML = addr;
+
+                        let type = document.createElement("td");
+                        type.setAttribute("id", "Type_"+addr);
+                        type.innerHTML = l["type"];
+
+                        let value = document.createElement("td");
+                        value.setAttribute("id", "Value_"+addr);
+                        
+                        let conf = document.createElement("td");
+                        let num_input = document.createElement("input");
+                        num_input.setAttribute("type", "number");
+                        num_input.setAttribute("id", "NumInput_"+addr)
+                        let apply_button = document.createElement("button");
+                        apply_button.innerHTML = "設定"
+                        apply_button.setAttribute("id", "ApplyButton_"+addr);
+                        apply_button.addEventListener("click", (ev)=>{
+                            let addr = ev.target.getAttribute("id").split("_")[1];
+                            let number = document.getElementById("NumInput_"+addr).value;
+                            fetch(`/api/registers?register=${addr}&value=${number}&submit=Set`);
+                        });
+                        conf.appendChild(num_input);
+                        conf.appendChild(apply_button);
+
+                        tr.appendChild(address);
+                        tr.appendChild(type);
+                        tr.appendChild(value);
+                        tr.appendChild(conf);
+
+                        table_area.appendChild(tr);
+                    }
+                });
+                count = j[0];
+            }
+
+            if(count!=j[0]) {
+                print_error();
+            }
+            
+            j.forEach((l)=>{
+                if(typeof(l)=="object") {
+                    let addr = l["address"];
+                    document.getElementById("Value_"+addr).innerHTML = l["value"];
+                }
+            });
+        });
+    }).catch(print_error);
+}
+
+const init = () => {
+    count = null;
+    table_area.innerHTML = "";
+    document.getElementById("start").setAttribute("hidden", "1");
+    document.getElementById("stop").removeAttribute("hidden");
+    fetch("/api/registers?range_start=&range_stop=&type=-1&action=-1&submit=Add").then(()=>{
+        timer_id = setInterval(refresh, 100);
+    });
+}
+
+const stop_fetch = () => {
+    if(timer_id) {
+        clearInterval(timer_id);
+    }
+    timer_id = null;
+    document.getElementById("start").removeAttribute("hidden");
+    document.getElementById("stop").setAttribute("hidden", "1");
+}
+
+const print_error = () => {
+    if(timer_id) {
+        clearInterval(timer_id);
+    }
+    timer_id = null;
+    alert("エラーが発生しました。リロードしてください。");
+    stop_fetch();
+}
+
+window.onload = () => {
+    table_area = document.getElementById("registers");
+    document.getElementById("start").addEventListener("click", init);
+    document.getElementById("stop").addEventListener("click", stop_fetch);
+    init();
+}
+    </script>
+<button id="start">開始</button>
+<button id="stop">停止</button>
+<table>
+    <thead><tr>
+        <th style="min-width: 4em;">レジスタのアドレス</th>
+        <th style="min-width: 4em;">型</th>
+        <th style="min-width: 10em;">値</th>
+        <th style="min-width: 16em;">値を変更</th>
+    </tr></thead>
+<tbody id="registers">
+</tbody>
+</table>
+</body>
+</html>

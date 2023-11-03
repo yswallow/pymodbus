@@ -295,9 +295,9 @@ class ModbusSimulatorServer:
         """Handle api registers."""
         page_type = request.path.split("/")[-1]
         params = await request.post()
-        json_dict = self.generator_html[page_type][0].copy()
-        result = self.generator_json[page_type][1](params, json_dict)
-        return web.Response(text=f"json build: {page_type} - {params} - {result}")
+        json_dict = self.generator_html[page_type][0]
+        result = self.generator_json[page_type+"_json"][1](params, json_dict)
+        return web.Response(text=result, content_type="text/json")
 
     def build_html_registers(self, params, html):
         """Build html registers page."""
@@ -454,8 +454,18 @@ class ModbusSimulatorServer:
         return html
 
     def build_json_registers(self, params, json_dict):
-        """Build html registers page."""
-        return f"json build registers: {params} - {json_dict}"
+        """Build json registers page."""
+        rows = "" 
+        for i in self.register_filter:
+            inx, reg = self.datastore_context.get_text_register(i)
+            if reg.type == Label.next:
+                continue
+            addr_range = inx.split("-")
+            words = int(addr_range[-1]) - int(addr_range[0]) + 1
+            rows += ",\r\n{" + f'"address": {addr_range[0]}, "words": {words}, "type": "{reg.type}", "value": "{reg.value}"' + " }"
+        json = f"[ {len(self.register_filter)}" + rows + "\r\n]"
+        return json
+        #return f"json build registers: {params} - {json_dict}"
 
     def build_json_calls(self, params, json_dict):
         """Build html calls page."""
